@@ -10,11 +10,11 @@ export enum ApiBackend {
 // Backend URLs
 export const API_URLS = {
   [ApiBackend.EXPRESS]: '',  // Empty to use relative paths
-  [ApiBackend.DJANGO]: 'http://0.0.0.0:8001',  // Direct Django connection (may not work in Replit)
+  [ApiBackend.DJANGO]: 'http://localhost:8001',  // Direct Django connection
   [ApiBackend.DJANGO_PROXY]: '/django-api'  // Django API proxied through Express
 };
 
-// Get backend from localStorage or default to EXPRESS
+// Get backend from localStorage or default to DJANGO
 const getStoredBackend = (): ApiBackend => {
   if (typeof window !== 'undefined') {
     const stored = localStorage.getItem('api_backend');
@@ -22,7 +22,7 @@ const getStoredBackend = (): ApiBackend => {
       return stored as ApiBackend;
     }
   }
-  return ApiBackend.EXPRESS;
+  return ApiBackend.DJANGO;
 };
 
 // Select which backend to use (EXPRESS, DJANGO, or DJANGO_PROXY)
