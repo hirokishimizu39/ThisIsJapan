@@ -1,10 +1,11 @@
-import express, { type Express } from "express";
+import express, { type Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import multer from "multer";
 import { z } from "zod";
 import { insertPhotoSchema, insertWordSchema, photoUploadSchema, wordPostSchema } from "@shared/schema";
 import path from "path";
+import axios from "axios";
 
 // Set up multer for file uploads
 const upload = multer({
@@ -214,8 +215,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Django API proxy routes
+  const djangoRouter = express.Router();
+  const DJANGO_BASE_URL = 'http://localhost:8001';
+
+  // Proxy all Django API requests
+  djangoRouter.all('*', async (req: Request, res: Response) => {
+    try {
+      const djangoPath = req.originalUrl.replace('/django-api', '');
+      const url = `${DJANGO_BASE_URL}${djangoPath}`;
+      
+      console.log(`Proxying request to Django: ${url}`);
+      
+      const response = await axios({
+        method: req.method,
+        url,
+        data: req.method !== 'GET' ? req.body : undefined,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      res.status(response.status).json(response.data);
+    } catch (error) {
+      console.error('Django proxy error:', error);
+      if (axios.isAxiosError(error) && error.response) {
+        res.status(error.response.status).json(error.response.data);
+      } else {
+        res.status(500).json({ message: 'Error connecting to Django backend' });
+      }
+    }
+  });
+
   // Register the API routes
   app.use("/api", router);
+  app.use("/django-api", djangoRouter);
 
   const httpServer = createServer(app);
   return httpServer;
