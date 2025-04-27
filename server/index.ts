@@ -1,6 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { spawn } from "child_process";
 
 const app = express();
 app.use(express.json());
@@ -37,6 +38,24 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Start Django server
+  const djangoProcess = spawn('python3', ['run_django.py']);
+  
+  djangoProcess.stdout.on('data', (data: Buffer) => {
+    console.log(`Django: ${data}`);
+  });
+  
+  djangoProcess.stderr.on('data', (data: Buffer) => {
+    console.error(`Django error: ${data}`);
+  });
+  
+  djangoProcess.on('close', (code: number) => {
+    console.log(`Django server exited with code ${code}`);
+  });
+  
+  // Wait a bit for Django to start
+  await new Promise(resolve => setTimeout(resolve, 3000));
+  
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
