@@ -13,7 +13,8 @@ def main():
         ) from exc
     
     # Start the server with specific host and port
-    sys.argv = ['manage.py', 'runserver', '0.0.0.0:8000']
+    # Use port 8001 to avoid conflict with Express server on 5000
+    sys.argv = ['manage.py', 'runserver', '0.0.0.0:8001']
     execute_from_command_line(sys.argv)
 
 if __name__ == '__main__':
