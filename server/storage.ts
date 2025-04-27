@@ -8,12 +8,13 @@ import {
 import { db } from "./db";
 import { eq, desc, sql } from "drizzle-orm";
 import session from "express-session";
-import connectPg from "connect-pg-simple";
+import connectPgSimple from "connect-pg-simple";
 import { pool } from "./db";
 import createMemoryStore from "memorystore";
 
+// Create session stores with proper types
 const MemoryStore = createMemoryStore(session);
-const PostgresSessionStore = connectPg(session);
+const PostgresStore = connectPgSimple(session);
 
 export interface IStorage {
   // User methods
@@ -41,11 +42,20 @@ export interface IStorage {
   createExperience(experience: InsertExperience): Promise<Experience>;
   
   // Session store for authentication
-  sessionStore: session.SessionStore;
+  sessionStore: session.Store;
 }
 
 export class DatabaseStorage implements IStorage {
+  sessionStore: session.Store;
+  
   constructor() {
+    // Use a PostgreSQL session store
+    const PostgresSessionStore = connectPgSimple(session);
+    this.sessionStore = new PostgresSessionStore({ 
+      pool, 
+      createTableIfMissing: true 
+    });
+    
     this.initializeDefaultData().catch(err => {
       console.error("Failed to initialize default data:", err);
     });

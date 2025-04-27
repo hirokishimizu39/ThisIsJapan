@@ -23,7 +23,12 @@ const upload = multer({
   },
 });
 
+import { setupAuth } from './auth';
+
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Setup authentication routes
+  setupAuth(app);
+  
   const router = express.Router();
 
   // Get top photos
@@ -150,6 +155,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create a new word
   router.post("/words", async (req, res) => {
     try {
+      // Check if user is authenticated
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "You must be logged in to post" });
+      }
+      
       const body = wordPostSchema.safeParse(req.body);
       
       if (!body.success) {
@@ -159,9 +169,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // In this simplified version, we'll use a sample user ID
-      // In a real app, this would come from the authenticated user
-      const userId = 2;
+      const userId = req.user!.id;
 
       const wordData = insertWordSchema.parse({
         original: req.body.original,
