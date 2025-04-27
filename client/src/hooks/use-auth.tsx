@@ -23,7 +23,7 @@ type LoginData = {
 // Type for registration data (extends login data with additional fields)
 type RegisterData = LoginData & {
   confirmPassword: string;
-  isJapanese: boolean;
+  is_japanese: boolean;
 };
 
 // Create the auth context
