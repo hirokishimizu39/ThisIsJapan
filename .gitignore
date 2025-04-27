@@ -4,3 +4,11 @@ dist
 server/public
 vite.config.ts.*
 *.tar.gz
+
+# Docker関連
+.env
+.env.*
+!.env.example
+docker-compose.override.yml
+docker-compose.*.override.yml
+postgres_data
