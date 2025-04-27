@@ -98,7 +98,7 @@ def register_user(request):
         user = User.objects.create(
             username=data['username'],
             password=data['password'],
-            is_japanese=data.get('isJapanese', False)
+            is_japanese=data.get('is_japanese', False)
         )
         
         # ログインさせる
