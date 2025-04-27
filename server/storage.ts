@@ -7,6 +7,13 @@ import {
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, sql } from "drizzle-orm";
+import session from "express-session";
+import connectPg from "connect-pg-simple";
+import { pool } from "./db";
+import createMemoryStore from "memorystore";
+
+const MemoryStore = createMemoryStore(session);
+const PostgresSessionStore = connectPg(session);
 
 export interface IStorage {
   // User methods
@@ -32,6 +39,9 @@ export interface IStorage {
   getAllExperiences(): Promise<Experience[]>;
   getExperience(id: number): Promise<Experience | undefined>;
   createExperience(experience: InsertExperience): Promise<Experience>;
+  
+  // Session store for authentication
+  sessionStore: session.SessionStore;
 }
 
 export class DatabaseStorage implements IStorage {

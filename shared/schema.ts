@@ -114,3 +114,17 @@ export const wordPostSchema = z.object({
   translation: z.string().max(140).optional(),
   description: z.string().min(10).max(500),
 });
+
+// Authentication schemas
+export const loginSchema = z.object({
+  username: z.string().min(3).max(50),
+  password: z.string().min(6),
+});
+
+export const registerSchema = insertUserSchema.extend({
+  password: z.string().min(6).max(100),
+  confirmPassword: z.string().min(6),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
