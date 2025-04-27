@@ -32,10 +32,10 @@ const AuthContext = createContext<AuthContextType | null>(null);
 // Hook to get the currently logged in user
 function useCurrentUser() {
   return useQuery<User | null, Error>({
-    queryKey: ["/api/user"],
+    queryKey: ["/api/user/"],
     queryFn: async () => {
       try {
-        const res = await apiRequest("GET", "/api/user");
+        const res = await apiRequest("GET", "/api/user/");
         if (res.status === 401) {
           return null;
         }
@@ -55,7 +55,7 @@ function useLoginMutation() {
   
   return useMutation({
     mutationFn: async (credentials: LoginData) => {
-      const res = await apiRequest("POST", "/api/login", credentials);
+      const res = await apiRequest("POST", "/api/login/", credentials);
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({ message: "Invalid username or password" }));
         throw new Error(errorData.message || "Login failed");
@@ -63,7 +63,7 @@ function useLoginMutation() {
       return await res.json();
     },
     onSuccess: (user: User) => {
-      queryClient.setQueryData(["/api/user"], user);
+      queryClient.setQueryData(["/api/user/"], user);
       toast({
         title: "Login successful",
         description: `Welcome back, ${user.username}!`,
@@ -88,7 +88,7 @@ function useRegisterMutation() {
       // Remove confirmPassword as it's not expected by the API
       const { confirmPassword, ...credentials } = data;
       
-      const res = await apiRequest("POST", "/api/register", credentials);
+      const res = await apiRequest("POST", "/api/register/", credentials);
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({ message: "Registration failed" }));
         throw new Error(errorData.message || "Registration failed");
@@ -96,7 +96,7 @@ function useRegisterMutation() {
       return await res.json();
     },
     onSuccess: (user: User) => {
-      queryClient.setQueryData(["/api/user"], user);
+      queryClient.setQueryData(["/api/user/"], user);
       toast({
         title: "Registration successful",
         description: `Welcome, ${user.username}!`,
@@ -118,14 +118,14 @@ function useLogoutMutation() {
   
   return useMutation({
     mutationFn: async () => {
-      const res = await apiRequest("POST", "/api/logout");
+      const res = await apiRequest("POST", "/api/logout/");
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({ message: "Logout failed" }));
         throw new Error(errorData.message || "Logout failed");
       }
     },
     onSuccess: () => {
-      queryClient.setQueryData(["/api/user"], null);
+      queryClient.setQueryData(["/api/user/"], null);
       // Invalidate any user-specific queries
       queryClient.invalidateQueries({ queryKey: ["/api/photos"] });
       queryClient.invalidateQueries({ queryKey: ["/api/words"] });
