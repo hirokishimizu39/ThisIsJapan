@@ -69,6 +69,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Upload photo
   router.post("/photos", upload.single("image"), async (req, res) => {
     try {
+      // Check if user is authenticated
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "You must be logged in to post" });
+      }
+      
       // In a real implementation, we would handle the file upload to a service like S3
       // For this MVP, we'll use the provided URL in the request body
       const body = photoUploadSchema.safeParse({
@@ -84,9 +89,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // In this simplified version, we'll use a sample user ID
-      // In a real app, this would come from the authenticated user
-      const userId = 1;
+      // Use the authenticated user's ID
+      const userId = req.user!.id;
       const imageUrl = req.body.imageUrl || "https://images.unsplash.com/photo-1528360983277-13d401cdc186";
 
       const photoData = insertPhotoSchema.parse({
@@ -106,6 +110,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Like a photo
   router.post("/photos/:id/like", async (req, res) => {
     try {
+      // Check if user is authenticated
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "You must be logged in to like a photo" });
+      }
+      
       const id = parseInt(req.params.id);
       const photo = await storage.likePhoto(id);
       if (!photo) {

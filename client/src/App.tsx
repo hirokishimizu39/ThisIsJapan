@@ -5,20 +5,30 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Home from "@/pages/Home";
 import NotFound from "@/pages/NotFound";
+import AuthPage from "@/pages/auth-page";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import BackendSelector from "@/components/BackendSelector";
+import { AuthProvider } from "@/hooks/use-auth";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 function Router() {
   return (
     <div className="flex flex-col min-h-screen">
-      <Header />
       <Switch>
-        <Route path="/" component={Home}/>
-        <Route component={NotFound} />
+        <Route path="/auth" component={AuthPage} />
+        <Route path="*">
+          <>
+            <Header />
+            <Switch>
+              <ProtectedRoute path="/" component={Home} />
+              <Route component={NotFound} />
+            </Switch>
+            <Footer />
+            <BackendSelector />
+          </>
+        </Route>
       </Switch>
-      <Footer />
-      <BackendSelector />
     </div>
   );
 }
@@ -26,10 +36,12 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Router />
-      </TooltipProvider>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Router />
+        </TooltipProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
