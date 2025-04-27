@@ -35,3 +35,12 @@ async function connectWithRetry(maxRetries = 5, retryDelay = 5000) {
 
 export const client = await connectWithRetry();
 export const db = drizzle(client, { schema });
+
+// Add a pool export for compatibility with connect-pg-simple
+export const pool = {
+  query: (text: string, params: any[]) => client.unsafe(text, params),
+  connect: async () => ({ 
+    release: () => {}, 
+    query: (text: string, params: any[]) => client.unsafe(text, params) 
+  }),
+};

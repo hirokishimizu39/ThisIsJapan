@@ -27,7 +27,7 @@ type RegisterData = LoginData & {
 };
 
 // Create the auth context
-export const AuthContext = createContext<AuthContextType | null>(null);
+const AuthContext = createContext<AuthContextType | null>(null);
 
 // Hook to get the currently logged in user
 function useCurrentUser() {
