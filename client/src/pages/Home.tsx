@@ -34,9 +34,20 @@ export default function Home() {
     queryKey: ['/api/words/top'],
   });
 
-  const { data: experiences = [] } = useQuery<Experience[]>({
+  // APIがページネーション形式（results配列内）でデータを返すため型定義を修正
+  interface PaginatedResponse<T> {
+    count: number;
+    next: string | null;
+    previous: string | null;
+    results: T[];
+  }
+
+  const { data: experiencesData } = useQuery<PaginatedResponse<Experience>>({
     queryKey: ['/api/experiences'],
   });
+  
+  // resultsから実際のExperienceの配列を取得するか、空配列をデフォルト値として使用
+  const experiences = experiencesData?.results || [];
 
   // Show modal after 30 seconds
   useEffect(() => {
