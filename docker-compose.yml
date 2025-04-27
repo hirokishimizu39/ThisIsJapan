@@ -7,7 +7,7 @@ services:
       dockerfile: Dockerfile
       target: development
     ports:
-      - "5000:5000"
+      - "3000:5000"
     volumes:
       - .:/app
       - /app/node_modules
@@ -15,8 +15,10 @@ services:
       - NODE_ENV=development
       - DATABASE_URL=postgres://postgres:password@db:5432/thisIsJapan
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     command: npm run dev
+    restart: unless-stopped
 
   db:
     image: postgres:15-alpine
@@ -26,6 +28,7 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=password
       - POSTGRES_DB=thisIsJapan
+      - POSTGRES_HOST_AUTH_METHOD=trust
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./docker/initdb:/docker-entrypoint-initdb.d
@@ -34,6 +37,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+      start_period: 10s
+    restart: unless-stopped
 
 volumes:
   postgres_data:

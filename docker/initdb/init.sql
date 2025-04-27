@@ -1,5 +1,8 @@
 -- 初期化スクリプト
 
+-- エラーを無視するように設定
+\set ON_ERROR_STOP off
+
 -- ユーザーロールの確認と作成
 DO $$
 BEGIN
@@ -9,8 +12,18 @@ BEGIN
 END
 $$;
 
--- データベースが存在しない場合は作成
-CREATE DATABASE "thisIsJapan" WITH OWNER postgres;
+-- データベースが存在しない場合のみ作成
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT FROM pg_database WHERE datname = 'thisIsJapan') THEN
+    PERFORM dblink_exec('', 'CREATE DATABASE "thisIsJapan" WITH OWNER postgres');
+  END IF;
+EXCEPTION
+  WHEN OTHERS THEN
+    -- エラーを無視して続行
+    NULL;
+END
+$$;
 
 -- 既存のデータベースに接続
 \c "thisIsJapan"
