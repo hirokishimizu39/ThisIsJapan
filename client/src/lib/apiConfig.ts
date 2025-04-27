@@ -1,6 +1,6 @@
 // API Configuration File
 export const DJANGO_API_BASE_URL = 'http://0.0.0.0:8001';
-export const EXPRESS_API_BASE_URL = '/api';
+export const EXPRESS_API_BASE_URL = '';  // Changed to empty string to avoid double /api/ prefix
 
 // Set this to true to use the Django backend, false to use Express
 export const USE_DJANGO_BACKEND = false;
@@ -14,11 +14,11 @@ export const getApiBaseUrl = () => {
 export const buildApiUrl = (endpoint: string): string => {
   const baseUrl = getApiBaseUrl();
   
-  // For Django, ensure endpoint starts with /api/
+  // If using Django and endpoint doesn't include /api/
   if (USE_DJANGO_BACKEND && !endpoint.startsWith('/api/')) {
     return `${baseUrl}/api${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
   }
   
-  // For Express or already formatted Django endpoints
-  return `${baseUrl}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+  // For Express, keep the endpoint as is (it already has /api/)
+  return `${baseUrl}${endpoint}`;
 };

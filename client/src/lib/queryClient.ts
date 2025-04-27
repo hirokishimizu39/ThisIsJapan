@@ -1,4 +1,5 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
+import { buildApiUrl, USE_DJANGO_BACKEND } from "./apiConfig";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
@@ -12,7 +13,10 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  const res = await fetch(url, {
+  // Build proper URL based on configuration
+  const apiUrl = url.startsWith('http') ? url : buildApiUrl(url);
+  
+  const res = await fetch(apiUrl, {
     method,
     headers: data ? { "Content-Type": "application/json" } : {},
     body: data ? JSON.stringify(data) : undefined,
@@ -29,7 +33,11 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const res = await fetch(queryKey[0] as string, {
+    // Build proper URL based on configuration
+    const endpoint = queryKey[0] as string;
+    const apiUrl = endpoint.startsWith('http') ? endpoint : buildApiUrl(endpoint);
+    
+    const res = await fetch(apiUrl, {
       credentials: "include",
     });
 
