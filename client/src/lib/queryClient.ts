@@ -13,18 +13,38 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  // Build proper URL based on configuration
-  const apiUrl = url.startsWith('http') ? url : buildApiUrl(url);
-  
-  const res = await fetch(apiUrl, {
-    method,
-    headers: data ? { "Content-Type": "application/json" } : {},
-    body: data ? JSON.stringify(data) : undefined,
-    credentials: "include",
-  });
-
-  await throwIfResNotOk(res);
-  return res;
+  try {
+    // Build proper URL based on configuration
+    const apiUrl = url.startsWith('http') ? url : buildApiUrl(url);
+    
+    console.log(`Sending ${method} request to: ${apiUrl}`);
+    
+    const res = await fetch(apiUrl, {
+      method,
+      headers: {
+        ...(data ? { "Content-Type": "application/json" } : {}),
+        // Add CORS headers
+        "Accept": "application/json"
+      },
+      body: data ? JSON.stringify(data) : undefined,
+      credentials: "include",
+      mode: "cors"
+    });
+    
+    console.log(`Response status: ${res.status}`);
+    
+    if (!res.ok) {
+      // エラー応答のボディを取得して出力
+      const errorText = await res.text();
+      console.error(`API Error (${res.status}):`, errorText);
+      throw new Error(`API エラー: ${res.status} ${res.statusText}`);
+    }
+    
+    return res;
+  } catch (error) {
+    console.error("API Request failed:", error);
+    throw error;
+  }
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";
@@ -33,20 +53,42 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    // Build proper URL based on configuration
-    const endpoint = queryKey[0] as string;
-    const apiUrl = endpoint.startsWith('http') ? endpoint : buildApiUrl(endpoint);
-    
-    const res = await fetch(apiUrl, {
-      credentials: "include",
-    });
-
-    if (unauthorizedBehavior === "returnNull" && res.status === 401) {
-      return null;
+    try {
+      // Build proper URL based on configuration
+      const endpoint = queryKey[0] as string;
+      const apiUrl = endpoint.startsWith('http') ? endpoint : buildApiUrl(endpoint);
+      
+      console.log(`Sending GET query to: ${apiUrl}`);
+      
+      const res = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          "Accept": "application/json"
+        },
+        credentials: "include",
+        mode: "cors"
+      });
+      
+      console.log(`Response status: ${res.status}`);
+      
+      if (unauthorizedBehavior === "returnNull" && res.status === 401) {
+        console.log("Unauthorized, returning null as requested.");
+        return null;
+      }
+      
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error(`API Error (${res.status}):`, errorText);
+        throw new Error(`API エラー: ${res.status} ${res.statusText}`);
+      }
+      
+      const data = await res.json();
+      console.log("Query response data:", data);
+      return data;
+    } catch (error) {
+      console.error("Query failed:", error);
+      throw error;
     }
-
-    await throwIfResNotOk(res);
-    return await res.json();
   };
 
 export const queryClient = new QueryClient({

@@ -10,7 +10,7 @@ export enum ApiBackend {
 // Backend URLs
 export const API_URLS = {
   [ApiBackend.EXPRESS]: '',  // Empty to use relative paths
-  [ApiBackend.DJANGO]: 'http://localhost:8001',  // Direct Django connection
+  [ApiBackend.DJANGO]: '/django-api',  // Using Django proxied through Express for better CORS handling
   [ApiBackend.DJANGO_PROXY]: '/django-api'  // Django API proxied through Express
 };
 
@@ -57,14 +57,9 @@ export const buildApiUrl = (endpoint: string): string => {
       return `${baseUrl}${endpoint}`;
       
     case ApiBackend.DJANGO_PROXY:
-      // For Django proxy access, strip /api/ if it exists since it's already in the proxy URL
-      if (endpoint.startsWith('/api/')) {
-        const path = endpoint.substring(4); // Remove '/api'
-        const apiUrl = `${baseUrl}${path.startsWith('/') ? path : `/${path}`}`;
-        console.log('Final Django-proxy URL:', apiUrl);
-        return apiUrl;
-      }
-      const apiUrl = `${baseUrl}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+      // プロキシ経由でDjangoにアクセスする場合の処理
+      // エンドポイントはそのまま保持する（サーバー側でプロキシが処理）
+      const apiUrl = `${baseUrl}${endpoint}`;
       console.log('Final Django-proxy URL:', apiUrl);
       return apiUrl;
       
