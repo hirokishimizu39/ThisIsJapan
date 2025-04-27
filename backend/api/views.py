@@ -1,6 +1,11 @@
 from rest_framework import viewsets, status
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from django.contrib.auth import login, authenticate, logout
+from django.contrib.auth.hashers import make_password
+from django.db import IntegrityError
+from django.http import JsonResponse
 from .models import User, Photo, Word, Experience
 from .serializers import (
     UserSerializer, UserCreateSerializer,
@@ -80,3 +85,61 @@ class ExperienceViewSet(viewsets.ModelViewSet):
         if self.action == 'create':
             return ExperienceCreateSerializer
         return ExperienceSerializer
+
+# Authentication views
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def register_user(request):
+    try:
+        data = request.data
+        # パスワードのハッシュ化
+        data['password'] = make_password(data['password'])
+        
+        user = User.objects.create(
+            username=data['username'],
+            password=data['password'],
+            is_japanese=data.get('isJapanese', False)
+        )
+        
+        # ログインさせる
+        login(request, user)
+        
+        # パスワードを除外したユーザーデータを返す
+        serializer = UserSerializer(user)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    except IntegrityError:
+        return Response({"message": "Username already exists"}, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def login_user(request):
+    username = request.data.get('username')
+    password = request.data.get('password')
+    
+    if not username or not password:
+        return Response({"message": "Please provide both username and password"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    # ユーザー認証
+    user = authenticate(username=username, password=password)
+    
+    if user is not None:
+        login(request, user)
+        serializer = UserSerializer(user)
+        return Response(serializer.data)
+    else:
+        return Response({"message": "Invalid username or password"}, status=status.HTTP_401_UNAUTHORIZED)
+
+@api_view(['POST'])
+def logout_user(request):
+    logout(request)
+    return Response({"message": "Successfully logged out"}, status=status.HTTP_200_OK)
+
+@api_view(['GET'])
+def get_current_user(request):
+    if request.user.is_authenticated:
+        serializer = UserSerializer(request.user)
+        return Response(serializer.data)
+    else:
+        return Response({"message": "Not authenticated"}, status=status.HTTP_401_UNAUTHORIZED)
