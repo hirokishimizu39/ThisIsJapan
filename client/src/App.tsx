@@ -7,6 +7,7 @@ import Home from "@/pages/Home";
 import NotFound from "@/pages/NotFound";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import BackendSelector from "@/components/BackendSelector";
 
 function Router() {
   return (
@@ -17,6 +18,7 @@ function Router() {
         <Route component={NotFound} />
       </Switch>
       <Footer />
+      <BackendSelector />
     </div>
   );
 }
