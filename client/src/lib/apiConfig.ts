@@ -37,26 +37,38 @@ export const getApiBaseUrl = () => {
 export const buildApiUrl = (endpoint: string): string => {
   const baseUrl = getApiBaseUrl();
   
+  // Log the API URL construction for debugging
+  console.log(`Building API URL for ${ACTIVE_BACKEND}:`, endpoint);
+  
   // Handle different backend URL patterns
   switch (ACTIVE_BACKEND) {
     case ApiBackend.DJANGO:
-      // For direct Django access, ensure endpoint starts with /api/
+      // For direct Django access
+      // Ensure we're using the proper path format
       if (!endpoint.startsWith('/api/')) {
-        return `${baseUrl}/api${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+        const apiUrl = `${baseUrl}/api${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+        console.log('Final Django URL:', apiUrl);
+        return apiUrl;
       }
+      console.log('Final Django URL:', `${baseUrl}${endpoint}`);
       return `${baseUrl}${endpoint}`;
       
     case ApiBackend.DJANGO_PROXY:
       // For Django proxy access, strip /api/ if it exists since it's already in the proxy URL
       if (endpoint.startsWith('/api/')) {
         const path = endpoint.substring(4); // Remove '/api'
-        return `${baseUrl}${path.startsWith('/') ? path : `/${path}`}`;
+        const apiUrl = `${baseUrl}${path.startsWith('/') ? path : `/${path}`}`;
+        console.log('Final Django-proxy URL:', apiUrl);
+        return apiUrl;
       }
-      return `${baseUrl}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+      const apiUrl = `${baseUrl}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+      console.log('Final Django-proxy URL:', apiUrl);
+      return apiUrl;
       
     case ApiBackend.EXPRESS:
     default:
       // For Express, keep the endpoint as is (it already has /api/)
+      console.log('Final Express URL:', `${baseUrl}${endpoint}`);
       return `${baseUrl}${endpoint}`;
   }
 };
