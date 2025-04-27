@@ -242,7 +242,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const djangoPath = req.originalUrl.replace('/django-api', '');
       const url = `${DJANGO_BASE_URL}${djangoPath}`;
       
-      console.log(`Proxying request to Django: ${url}`);
+      console.log(`Proxying request to Django: ${url} (Method: ${req.method})`);
+      
+      // Forward cookies from client to Django for authentication
+      const cookieHeader = req.headers.cookie;
       
       const response = await axios({
         method: req.method,
@@ -250,8 +253,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
         data: req.method !== 'GET' ? req.body : undefined,
         headers: {
           'Content-Type': 'application/json',
+          ...(cookieHeader ? { 'Cookie': cookieHeader } : {}),
         },
+        withCredentials: true
       });
+      
+      // Set headers from Django response
+      const setCookieHeader = response.headers['set-cookie'];
+      if (setCookieHeader) {
+        if (Array.isArray(setCookieHeader)) {
+          setCookieHeader.forEach(cookie => {
+            res.append('Set-Cookie', cookie);
+          });
+        } else {
+          res.setHeader('Set-Cookie', setCookieHeader);
+        }
+      }
+      
+      // Forward any other important headers
+      const headersToForward = [
+        'content-type', 
+        'authorization',
+        'access-control-allow-origin',
+        'access-control-allow-credentials',
+        'access-control-allow-methods',
+        'access-control-allow-headers'
+      ];
+      
+      headersToForward.forEach(header => {
+        const value = response.headers[header];
+        if (value) {
+          res.setHeader(header, value);
+        }
+      });
+      
+      console.log('Django response status:', response.status);
+      console.log('Django response data:', response.data);
       
       res.status(response.status).json(response.data);
     } catch (error) {
