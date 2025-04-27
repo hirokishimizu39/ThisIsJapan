@@ -41,7 +41,7 @@ const registerSchema = z.object({
     .min(8, "Password must be at least 8 characters")
     .max(100, "Password is too long"),
   confirmPassword: z.string(),
-  isJapanese: z.boolean().default(false),
+  is_japanese: z.boolean().default(false),
 }).refine(data => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
@@ -204,7 +204,7 @@ function RegisterForm({
       username: "",
       password: "",
       confirmPassword: "",
-      isJapanese: false,
+      is_japanese: false,
     },
   });
 
@@ -263,7 +263,7 @@ function RegisterForm({
             />
             <FormField
               control={form.control}
-              name="isJapanese"
+              name="is_japanese"
               render={({ field }) => (
                 <FormItem className="flex flex-row items-start space-x-3 space-y-0 py-2">
                   <FormControl>
