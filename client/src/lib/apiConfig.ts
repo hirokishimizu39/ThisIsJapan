@@ -17,6 +17,9 @@ export const API_URLS = {
 // Get backend from localStorage or default to DJANGO
 const getStoredBackend = (): ApiBackend => {
   if (typeof window !== 'undefined') {
+    // 一時的にAPIバックエンドをDjangoに設定
+    localStorage.setItem('api_backend', ApiBackend.DJANGO);
+    
     const stored = localStorage.getItem('api_backend');
     if (stored && Object.values(ApiBackend).includes(stored as ApiBackend)) {
       return stored as ApiBackend;
